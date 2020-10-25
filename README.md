@@ -1,3 +1,7 @@
+# Questions
+
+DynamoDb is based on NoSql. According to my opinions, we should design the table structure that suits quering. So I think the guidance in this assignments is a bit of misleading. If I designed the structure of my Data by using userId as partition key and createdAt as sort key, the update todo and delete todo is quite unconveninet. So I use todoId as partition key and useId as Index 
+
 # Serverless TODO
 
 To implement this project, you need to implement a simple TODO application using AWS Lambda and Serverless framework. Search for all comments starting with the `TODO:` in the code to find the placeholders that you need to implement.
