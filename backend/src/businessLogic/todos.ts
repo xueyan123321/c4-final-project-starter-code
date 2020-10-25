@@ -5,9 +5,8 @@ import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { TodosAccess } from '../dataLayer/todosAccess'
 
 const todosAccess = new TodosAccess();
-const TO_DO_IMAGES_BUCKET = process.env.ATTACHMENTS_BUCKET
 
-export async function getUserTodos(userId:string): Promise<AWS.DynamoDB.DocumentClient.ItemList>{
+export async function getUserTodos(userId:string){
     return todosAccess.getUserTodos(userId)
 }
 
@@ -19,15 +18,18 @@ export async function createTodo(requestBody: CreateTodoRequest, userId: string)
         createdAt: new Date().toISOString(),
         name: requestBody.name,
         dueDate: requestBody.dueDate,
-        done: false,
-        attachmentUrl: `https://${TO_DO_IMAGES_BUCKET}.s3.amazonaws.com/${itemId}`
+        done: false
     })
 }
 
-export async function updateTodo(updateTodo: UpdateTodoRequest, toDoId: string){
-    await todosAccess.updateTodo(toDoId, updateTodo);
+export async function updateTodo(userId: string, updateTodo: UpdateTodoRequest, toDoId: string){
+    await todosAccess.updateTodo(userId, toDoId, updateTodo);
 }
 
-export async function deleteTodo(todoId: string): Promise<void>{
-    await todosAccess.deleteTodo(todoId);
+export async function deleteTodo(userId: string, todoId: string): Promise<void>{
+    await todosAccess.deleteTodo(userId, todoId);
+}
+
+export async function getUploadUrl(userId: string, todoId: string){
+    return await todosAccess.getUploadUrl(userId, todoId);
 }

@@ -3,19 +3,23 @@ import * as AWS from 'aws-sdk';
 import * as AWSXRay from 'aws-xray-sdk';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 
+import { createLogger } from '../utils/logger'
+
 const XAWS = AWSXRay.captureAWS(AWS);
+const logger = createLogger('todosAccess');
 
 export class TodosAccess {
     constructor(
         private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient(),
+        private readonly s3 = new XAWS.S3({
+            signatureVersion: 'v4'
+          }),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly userIdIndex = process.env.USER_ID_INDEX
     ){}
-    //@ts-ignore
-    async getUserTodos(userId: string): AWS.DynamoDB.DocumentClient.ItemList {
+
+    async getUserTodos(userId: string){
         const result = await this.docClient.query({
             TableName: this.todosTable,
-            IndexName: this.userIdIndex,
             KeyConditionExpression: "userId =:userId",
             ExpressionAttributeValues:{
               ":userId": userId
@@ -33,11 +37,12 @@ export class TodosAccess {
         return todoItem;
     }
 
-    async updateTodo(todoId: string, todoBody: UpdateTodoRequest){
+    async updateTodo(userId: string, todoId: string, todoBody: UpdateTodoRequest){
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                "todoId": todoId,
+                userId,
+                todoId
             },
             UpdateExpression: "SET done = :done",
             ExpressionAttributeValues: {
@@ -46,12 +51,33 @@ export class TodosAccess {
         }).promise()
     }
 
-    async deleteTodo(todoId: string){
+    async deleteTodo(userId: string, todoId: string){
         await this.docClient.delete({
             TableName: this.todosTable,
             Key: {
-                "todoId": todoId
+                userId,
+                todoId
             }
         }).promise()
+    }
+
+    async getUploadUrl(userId: string, todoId: string){
+        const uploadUrl = this.s3.getSignedUrl('putObject', {
+            Bucket: process.env.ATTACHMENTS_BUCKET,
+            Key: todoId,
+            Expires: Number(process.env.SIGNED_URL_EXPIRATION)
+          });
+        logger.info(uploadUrl);
+        await this.docClient.update({
+            TableName: this.todosTable,
+            Key: { userId, todoId },
+            UpdateExpression: "set attachmentUrl=:URL",
+            ExpressionAttributeValues: {
+              ":URL": uploadUrl.split("?")[0]
+          },
+          ReturnValues: "UPDATED_NEW"
+        })
+        .promise();
+        return uploadUrl
     }
 }

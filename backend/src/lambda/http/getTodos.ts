@@ -4,6 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } f
 import { getUserId } from '../utils'
 import { getUserTodos  } from '../../businessLogic/todos'
 
+
 // const docClient = new AWS.DynamoDB.DocumentClient()
 // const toDosTable = process.env.TODOS_TABLE
 
