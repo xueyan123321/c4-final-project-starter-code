@@ -1,5 +1,5 @@
 service:
-  name: serverless-todo-app
+  name: serverless-date-courses-app
 
 plugins:
   - serverless-webpack
@@ -17,10 +17,10 @@ provider:
     apiGateway: true
 
   environment:
-    TODOS_TABLE: toDos-${self:provider.stage}
-    # USER_ID_INDEX: userIdIndex
-    AUTH_0_SECRET: gpiUGjSriK0hzQ_NqI0ouFDjaCH1Rv4x-gllaNsuYhwj63kOuqttRXgXF0671c2E
-    ATTACHMENTS_BUCKET: xue-attachments-url-${self:provider.stage}-${self:provider.region}
+    VIDEOS_TABLE: dateCourses-${self:provider.stage}
+    VIDEOS_ID_INDEX: videosIdIndex
+    AUTH_0_SECRET: y1JYZ-ymqL8jCT0NXaKziB8zv9zORLIKzLprcY9g7-3Q6vLJumq6HRb50r0Qh1l6
+    ATTACHMENTS_BUCKET: datecourses-attachments-url-${self:provider.stage}-${self:provider.region}
     SIGNED_URL_EXPIRATION: 300
 
 functions:
@@ -29,21 +29,21 @@ functions:
     handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetVideos:
+    handler: src/lambda/http/getVideos.handler
     events:
       - http:
           method: get
-          path: todos
+          path: videos
           cors: true
           authorizer: Auth
-    iamRoleStatementsName: get-todo-role-function
+    iamRoleStatementsName: get-videos-role-function
     iamRoleStatements:
       - Effect: Allow
         Action: 
           - dynamodb:GetItem
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -55,23 +55,24 @@ functions:
 
   # TODO: Configure this function
 
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  CreateVideo:
+    handler: src/lambda/http/createVideo.handler
     events:
       - http:
           method: post
-          path: todos
+          path: videos
           cors: true
+          authorizer: Auth
           request: 
           # schema that will be used to validate incoming requests
             schema:
-              application/json: ${file(src/models/validators/create-todo-request.json)}
-    iamRoleStatementsName: create-todo-role-function
+              application/json: ${file(src/models/validators/create-video-request.json)}
+    iamRoleStatementsName: create-video-role-function-modify
     iamRoleStatements: 
       - Effect: Allow
         Action: 
           - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -81,23 +82,27 @@ functions:
 
 
   # TODO: Configure this function
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateVideo:
+    handler: src/lambda/http/updateVideo.handler
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: videos/{videoId}
           cors: true
           request:
           # schema that will be used to validate incoming requests
             schema:
-              application/json: ${file(src/models/validators/update-todo-request.json)}
-    iamRoleStatementsName: update-todo-role-function
+              application/json: ${file(src/models/validators/update-video-request.json)}
+    iamRoleStatementsName: update-video-role-function
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}/index/${self:provider.environment.VIDEOS_ID_INDEX}
+      - Effect: Allow
+        Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -106,19 +111,23 @@ functions:
           - "*"
 
   # TODO: Configure this function
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteVideo:
+    handler: src/lambda/http/deleteVideo.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: videos/{videoId}
           cors: true
-    iamRoleStatementsName: delete-todo-role-function
+    iamRoleStatementsName: delete-video-role1-function
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}/index/${self:provider.environment.VIDEOS_ID_INDEX}
+      - Effect: Allow
+        Action:
           - dynamodb:DeleteItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -132,9 +141,9 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: videos/{videoId}/attachment
           cors: true
-    iamRoleStatementsName: generate-uploadUrl-role-function
+    iamRoleStatementsName: generate-uploadUrl-video-role-function
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -144,7 +153,11 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.VIDEOS_TABLE}/index/${self:provider.environment.VIDEOS_ID_INDEX}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -198,28 +211,30 @@ resources:
             Effect: Allow
             Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
 
-    TodoTable:
+    videosTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: todoId
+          - AttributeName: uploadAtTime
+            AttributeType: S
+          - AttributeName: videoId
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: todoId
+          - AttributeName: uploadAtTime
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
-        # GlobalSecondaryIndexes:
-        #   - IndexName: ${self:provider.environment.USER_ID_INDEX}
-        #     KeySchema:
-        #       - AttributeName: userId
-        #         KeyType: HASH
-        #     Projection: 
-        #       ProjectionType: ALL
+        TableName: ${self:provider.environment.VIDEOS_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.VIDEOS_ID_INDEX}
+            KeySchema:
+              - AttributeName: videoId
+                KeyType: HASH
+            Projection: 
+              ProjectionType: ALL
               
 
         

@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 // import * as AWS  from 'aws-sdk'
 import { getUserId } from '../utils'
-import { getUserTodos  } from '../../businessLogic/todos'
+import { getUserVideos  } from '../../businessLogic/videos'
 
 
 // const docClient = new AWS.DynamoDB.DocumentClient()
@@ -12,7 +12,7 @@ import { getUserTodos  } from '../../businessLogic/todos'
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
   const userId = getUserId(event);
-  const items = await getUserTodos(userId);
+  const items = await getUserVideos(userId);
 
   return {
     statusCode: 200,

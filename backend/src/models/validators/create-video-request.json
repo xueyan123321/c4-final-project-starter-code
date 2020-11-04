@@ -3,15 +3,14 @@
     "title": "todo",
     "type": "object",
     "properties": {
-        "name": {
+        "userId":{
             "type": "string"
         },
-        "dueDate": {
+        "title":{
             "type": "string"
         }
     },
     "required": [
-        "name",
-        "dueDate"
+        "title"
     ]
 }

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Form, Button } from 'semantic-ui-react'
 import Auth from '../auth/Auth'
-import { getUploadUrl, uploadFile } from '../api/todos-api'
+import { getUploadUrl, uploadFile } from '../api/videos-api'
 
 enum UploadState {
   NoUpload,
@@ -9,25 +9,25 @@ enum UploadState {
   UploadingFile,
 }
 
-interface EditTodoProps {
+interface EditVideoProps {
   match: {
     params: {
-      todoId: string
+      videoId: string
     }
   }
   auth: Auth
 }
 
-interface EditTodoState {
+interface EditVideoState {
   file: any
   uploadState: UploadState
 }
 
-export class EditTodo extends React.PureComponent<
-  EditTodoProps,
-  EditTodoState
+export class EditVideo extends React.PureComponent<
+  EditVideoProps,
+  EditVideoState
 > {
-  state: EditTodoState = {
+  state: EditVideoState = {
     file: undefined,
     uploadState: UploadState.NoUpload
   }
@@ -51,8 +51,8 @@ export class EditTodo extends React.PureComponent<
       }
 
       this.setUploadState(UploadState.FetchingPresignedUrl)
-      const uploadUrl = await getUploadUrl(this.props.auth.getIdToken(), this.props.match.params.todoId)
-      console.log(uploadUrl, 'uploadUrl');
+      console.log(this.props.match.params.videoId, 'videoId');
+      const uploadUrl = await getUploadUrl(this.props.auth.getIdToken(), this.props.match.params.videoId)
       this.setUploadState(UploadState.UploadingFile)
       await uploadFile(uploadUrl, this.state.file)
 
@@ -73,14 +73,14 @@ export class EditTodo extends React.PureComponent<
   render() {
     return (
       <div>
-        <h1>Upload new image</h1>
+        <h1>Upload new Video</h1>
 
         <Form onSubmit={this.handleSubmit}>
           <Form.Field>
             <label>File</label>
             <input
               type="file"
-              accept="image/*"
+              accept="video/*"
               placeholder="Image to upload"
               onChange={this.handleFileChange}
             />

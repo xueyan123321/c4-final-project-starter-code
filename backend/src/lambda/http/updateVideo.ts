@@ -2,20 +2,17 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 
-import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+import { UpdateVideoRequest } from '../../requests/UpdateTodoRequest'
 
-import { updateTodo } from '../../businessLogic/todos'
-
-import { getUserId  } from '../../lambda/utils'
+import { updateVideo } from '../../businessLogic/videos'
 
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const todoId = event.pathParameters.todoId
-  const userId = getUserId(event)
-  const updatedTodoBody: UpdateTodoRequest = JSON.parse(event.body)
+  const videoId = event.pathParameters.videoId;
+  const updatedVideoBody: UpdateVideoRequest = JSON.parse(event.body);
 
   // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
-  await updateTodo(userId, updatedTodoBody, todoId)
+  await updateVideo(videoId, updatedVideoBody.title);
   return {
     statusCode: 204,
     headers: {
